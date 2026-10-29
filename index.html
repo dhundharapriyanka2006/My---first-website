@@ -96,11 +96,8 @@ function showForm(mode) {
 
     document.getElementById('message').textContent = '';
 }
-
-document.getElementById('user-form').addEventListener('submit', function(event) {
+ document.getElementById('user-form').addEventListener('submit', function(event) {
     event.preventDefault();
-
-    document.getElementById('message').textContent =
-        'Form design ready. Firebase Authentication connect karna abhi baaki hai.';
+    window.location.href = 'auth.html?mode=signup';
 });
 </script>
