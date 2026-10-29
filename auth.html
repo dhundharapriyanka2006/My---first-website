@@ -148,7 +148,8 @@
           await signInWithEmailAndPassword(
             auth, emailInput.value.trim(), passwordInput.value
           );
-          message.textContent = "Login successful!";
+          message.textContent = "Login successful! Opening dashboard...";
+          window.location.href = "dashboard.html";
         }
       } catch (error) {
         message.textContent = error.message;
