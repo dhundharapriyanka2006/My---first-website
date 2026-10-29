@@ -1,7 +1,178 @@
-var admin = require("firebase-admin");
 
-var serviceAccount = require("path/to/serviceAccountKey.json");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Sign Up</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+    .card {
+      background: white;
+      padding: 28px;
+      width: min(340px, calc(100% - 56px));
+      border-radius: 14px;
+      box-shadow: 0 5px 20px #0002;
+    }
+
+    h1 { text-align: center; color: #1d4ed8; }
+
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    input { border: 1px solid #cbd5e1; }
+
+    button {
+      border: 0;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    .switch {
+      background: transparent;
+      color: #2563eb;
+    }
+
+    #message { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="heading">Sign Up</h1>
+
+    <form id="authForm">
+      <input id="name" type="text" placeholder="Full Name" autocomplete="name">
+      <input id="email" type="email" placeholder="Email Address"
+             autocomplete="email" required>
+      <input id="password" type="password" placeholder="Password"
+             autocomplete="new-password" minlength="6" required>
+      <button id="submitBtn" type="submit">Create Account</button>
+    </form>
+
+    <button id="switchBtn" class="switch" type="button">
+      Already have an account? Login
+    </button>
+
+    <button id="logoutBtn" type="button" hidden>Logout</button>
+    <p id="message" role="status"></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+
+    import {
+      getAuth, createUserWithEmailAndPassword,
+      signInWithEmailAndPassword, signOut, onAuthStateChanged,
+      updateProfile
+    } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMi59qqF2hn5a_lnXQydEHaN-vnx_L3mE",
+      authDomain: "my---first-website.firebaseapp.com",
+      projectId: "my---first-website",
+      storageBucket: "my---first-website.firebasestorage.app",
+      messagingSenderId: "461174732461",
+      appId: "1:461174732461:web:3fd5a3e03cf569ccf13824",
+      measurementId: "G-DJ74RB9LX2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById("authForm");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const heading = document.getElementById("heading");
+    const submitBtn = document.getElementById("submitBtn");
+    const switchBtn = document.getElementById("switchBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const message = document.getElementById("message");
+
+    let mode = new URLSearchParams(location.search).get("mode") === "login"
+      ? "login" : "signup";
+
+    function renderMode() {
+      const signup = mode === "signup";
+      heading.textContent = signup ? "Sign Up" : "Login";
+      nameInput.hidden = !signup;
+      nameInput.required = signup;
+      nameInput.autocomplete = signup ? "name" : "off";
+      passwordInput.autocomplete = signup ? "new-password" : "current-password";
+      submitBtn.textContent = signup ? "Create Account" : "Login";
+      switchBtn.textContent = signup
+        ? "Already have an account? Login"
+        : "Need an account? Sign Up";
+      message.textContent = "";
+    }
+
+    switchBtn.addEventListener("click", () => {
+      mode = mode === "signup" ? "login" : "signup";
+      renderMode();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "Please wait...";
+
+      try {
+        if (mode === "signup") {
+          const result = await createUserWithEmailAndPassword(
+            auth, emailInput.value.trim(), passwordInput.value
+          );
+
+          const displayName = nameInput.value.trim();
+          if (displayName) {
+            await updateProfile(result.user, { displayName });
+          }
+
+          message.textContent = "Account created successfully!";
+        } else {
+          await signInWithEmailAndPassword(
+            auth, emailInput.value.trim(), passwordInput.value
+          );
+          message.textContent = "Login successful!";
+        }
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        message.textContent = "Logged out successfully.";
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      logoutBtn.hidden = !user;
+      if (user) {
+        message.textContent = "Logged in as " + user.email;
+      }
+    });
+
+    renderMode();
+  </script>
+</body>
+</html>
+
