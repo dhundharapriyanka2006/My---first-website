@@ -166,11 +166,12 @@
     });
 
     onAuthStateChanged(auth, (user) => {
-      logoutBtn.hidden = !user;
-      if (user) {
-        message.textContent = "Logged in as " + user.email;
-      }
-    });
+     logoutBtn.hidden = !user;
+
+     if (user) {
+       window.location.replace("dashboard.html");
+  }
+});
 
     renderMode();
   </script>
