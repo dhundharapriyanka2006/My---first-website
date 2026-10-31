@@ -116,7 +116,7 @@
       "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
     import {
-      getFirestore, doc, getDoc
+      getFirestore, doc, getDoc, setDoc, serverTimestamp
     } from
       "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
@@ -133,7 +133,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
     const status = document.getElementById("status");
 
     onAuthStateChanged(auth, async (user) => {
@@ -146,7 +145,21 @@
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-        const profile = userSnap.exists() ? userSnap.data() : {};
+        let profile;
+
+        if (userSnap.exists()) {
+          profile = userSnap.data();
+        } else {
+          profile = {
+            uid: user.uid,
+            name: user.displayName || "Student",
+            email: user.email || "",
+            createdAt: serverTimestamp()
+          };
+
+          await setDoc(userRef, profile);
+        }
+
         const name = profile.name || user.displayName || "Student";
         const email = profile.email || user.email || "Not available";
 
@@ -158,9 +171,9 @@
 
         status.textContent = "";
       } catch (error) {
+        console.error(error);
         status.textContent =
           "Could not load profile. Please refresh the page.";
-        console.error(error);
       }
     });
 
