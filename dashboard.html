@@ -30,9 +30,7 @@
       gap: 12px;
     }
 
-    header h2 {
-      font-size: 22px;
-    }
+    header h2 { font-size: 22px; }
 
     button {
       border: none;
@@ -54,18 +52,9 @@
       padding: 20px;
     }
 
-    .welcome {
-      margin-bottom: 28px;
-    }
-
-    .welcome h1 {
-      font-size: 30px;
-      margin-bottom: 10px;
-    }
-
-    .welcome p {
-      color: #64748b;
-    }
+    .welcome { margin-bottom: 28px; }
+    .welcome h1 { font-size: 30px; margin-bottom: 10px; }
+    .welcome p { color: #64748b; }
 
     .card {
       background: white;
@@ -75,38 +64,15 @@
       margin-bottom: 20px;
     }
 
-    .card h3 {
-      color: #4338ca;
-      margin-bottom: 18px;
-    }
-
-    .info {
-      margin: 14px 0;
-      overflow-wrap: anywhere;
-    }
-
-    .info strong {
-      display: inline-block;
-      min-width: 90px;
-    }
-
-    #status {
-      margin-top: 15px;
-      color: #b91c1c;
-    }
+    .card h3 { color: #4338ca; margin-bottom: 18px; }
+    .info { margin: 14px 0; overflow-wrap: anywhere; }
+    .info strong { display: inline-block; min-width: 90px; }
+    #status { margin-top: 15px; color: #b91c1c; }
 
     @media (max-width: 500px) {
-      header {
-        padding: 16px;
-      }
-
-      main {
-        margin: 25px auto;
-      }
-
-      .welcome h1 {
-        font-size: 25px;
-      }
+      header { padding: 16px; }
+      main { margin: 25px auto; }
+      .welcome h1 { font-size: 25px; }
     }
   </style>
 </head>
@@ -125,17 +91,9 @@
 
     <section class="card">
       <h3>My Profile</h3>
-
-      <p class="info">
-        <strong>Name:</strong>
-        <span id="studentName">Loading...</span>
-      </p>
-
-      <p class="info">
-        <strong>Email:</strong>
-        <span id="studentEmail">Loading...</span>
-      </p>
-
+      <p class="info"><strong>Name:</strong> <span id="studentName">Loading...</span></p>
+      <p class="info"><strong>Email:</strong> <span id="studentEmail">Loading...</span></p>
+      <p class="info"><strong>User ID:</strong> <span id="studentUID">Loading...</span></p>
       <p id="status" role="status"></p>
     </section>
 
@@ -153,11 +111,14 @@
       "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
     import {
-      getAuth,
-      onAuthStateChanged,
-      signOut
+      getAuth, onAuthStateChanged, signOut
     } from
       "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+    import {
+      getFirestore, doc, getDoc
+    } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCMi59qqF2hn5a_lnXQydEHaN-vnx_L3mE",
@@ -171,23 +132,35 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     const status = document.getElementById("status");
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const name = user.displayName || "Student";
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.replace("auth.html?mode=login");
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        const profile = userSnap.exists() ? userSnap.data() : {};
+        const name = profile.name || user.displayName || "Student";
+        const email = profile.email || user.email || "Not available";
 
         document.getElementById("welcomeText").textContent =
           `Welcome, ${name}!`;
-
         document.getElementById("studentName").textContent = name;
-        document.getElementById("studentEmail").textContent =
-          user.email || "Not available";
+        document.getElementById("studentEmail").textContent = email;
+        document.getElementById("studentUID").textContent = user.uid;
 
         status.textContent = "";
-      } else {
-        window.location.replace("auth.html?mode=login");
+      } catch (error) {
+        status.textContent =
+          "Could not load profile. Please refresh the page.";
+        console.error(error);
       }
     });
 
@@ -202,4 +175,3 @@
   </script>
 </body>
 </html>
-
